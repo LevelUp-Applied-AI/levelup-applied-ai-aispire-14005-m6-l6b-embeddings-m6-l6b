@@ -14,13 +14,12 @@ Compare three text representation methods — TF-IDF, GloVe, and DistilBERT — 
 ```bash
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 ```
 
-DistilBERT runs on PyTorch; we install the CPU wheel explicitly so the download stays small. `requirements.txt` intentionally omits `torch`.
+DistilBERT uses PyTorch. `torch` is listed in `requirements.txt` (version 2.4 or higher) and `pip install` will download the correct version for your computer automatically.
 
-**Note:** The first time you import DistilBERT, the model (~250MB) will be downloaded and cached. This may take a few minutes on slower connections.
+**Note:** The first time you import DistilBERT, the model files (~250 MB) will be downloaded and cached (saved) on your computer. This may take a few minutes on slower internet connections. After the first time, the model loads from the cache on your computer.
 
 ## Data
 

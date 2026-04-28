@@ -94,6 +94,20 @@ def test_text_to_glove_oov():
     assert embedding.shape == (50,), f"Expected shape (50,), got {embedding.shape}"
 
 
+def test_text_to_glove_all_oov():
+    """text_to_glove should return a zero vector when every word is OOV."""
+    glove = load_glove(GLOVE_PATH)
+    assert glove is not None
+    embedding = text_to_glove("xyzzyplugh qwertyuiopasdf zxcvbnmlkjhg", glove)
+    assert embedding is not None, "text_to_glove returned None for all-OOV text"
+    assert isinstance(embedding, np.ndarray), "Must return a numpy array"
+    assert embedding.shape == (50,), f"Expected shape (50,), got {embedding.shape}"
+    assert np.allclose(embedding, 0), (
+        "All-OOV text must return a zero vector of shape (50,); "
+        f"got non-zero values (mean={embedding.mean():.4f})"
+    )
+
+
 # ── BERT ─────────────────────────────────────────────────────────────────
 
 try:
@@ -143,8 +157,8 @@ def test_compare_similarities():
     )
     assert comparison is not None, "compare_similarities returned None"
     assert isinstance(comparison, dict), "Must return a dict"
-    assert len(comparison) >= len(queries), (
-        f"Expected results for {len(queries)} queries, got {len(comparison)}"
+    assert len(comparison) == len(queries), (
+        f"Expected exactly {len(queries)} query keys, got {len(comparison)}"
     )
     for q in queries:
         assert q in comparison, f"Missing query key: {q[:50]}..."
@@ -152,4 +166,13 @@ def test_compare_similarities():
             assert method in comparison[q], f"Missing method '{method}' for query"
             results = comparison[q][method]
             assert isinstance(results, list), f"{method} results must be a list"
-            assert len(results) >= 3, f"Expected at least 3 results for {method}"
+            assert len(results) == 3, (
+                f"Expected exactly 3 results for {method}, got {len(results)} "
+                "(spec: top-3 most similar texts excluding the query itself)"
+            )
+            # Spec: results must exclude the query itself
+            result_texts = [t for t, _ in results]
+            assert q not in result_texts, (
+                f"{method} results for query must exclude the query itself; "
+                f"query was returned in its own top-3"
+            )

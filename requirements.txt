@@ -1,6 +1,6 @@
+torch>=2.4
 transformers
 scikit-learn
 pandas
 numpy
-matplotlib
 pytest
