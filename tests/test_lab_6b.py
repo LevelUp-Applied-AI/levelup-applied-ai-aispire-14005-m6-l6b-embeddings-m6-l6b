@@ -120,17 +120,35 @@ except ImportError:
 
 @pytest.mark.skipif(not _HAS_TRANSFORMERS, reason="transformers not installed")
 def test_bert_embedding():
-    """extract_bert_embedding should return a 768-d vector."""
+    """extract_bert_embedding should return a 768-d mean-pooled vector."""
     tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
     model = AutoModel.from_pretrained("distilbert-base-uncased")
     model.eval()
-    embedding = extract_bert_embedding(
-        "Climate change is a global challenge.", tokenizer, model
-    )
+    text = "Climate change is a global challenge."
+    embedding = extract_bert_embedding(text, tokenizer, model)
     assert embedding is not None, "extract_bert_embedding returned None"
     assert isinstance(embedding, np.ndarray), "Must return a numpy array"
     assert embedding.shape == (768,), f"Expected shape (768,), got {embedding.shape}"
     assert not np.allclose(embedding, 0), "BERT embedding should not be all zeros"
+    # Spec (docstring): mean-pool last_hidden_state across the token dimension
+    # with attention-mask handling. Reject CLS-token output (last_hidden_state[:,0,:]).
+    enc = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        outputs = model(**enc)
+    last_hidden = outputs.last_hidden_state  # (1, seq, 768)
+    mask = enc["attention_mask"].unsqueeze(-1).float()  # (1, seq, 1)
+    expected_mean = (last_hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1e-9)
+    expected_mean = expected_mean.squeeze(0).numpy()
+    cls_only = last_hidden[:, 0, :].squeeze(0).numpy()
+    assert np.allclose(embedding, expected_mean, atol=1e-4), (
+        "Embedding must be the attention-mask-weighted mean of last_hidden_state "
+        "across the token dimension (spec: mean-pool with attention-mask handling). "
+        "Returning CLS-token output (last_hidden_state[:,0,:]) is not mean pooling."
+    )
+    assert not np.allclose(embedding, cls_only, atol=1e-4), (
+        "Embedding equals the CLS-token vector — spec requires mean pooling, "
+        "not CLS-token extraction."
+    )
 
 
 # ── Comparison ───────────────────────────────────────────────────────────
@@ -175,4 +193,10 @@ def test_compare_similarities():
             assert q not in result_texts, (
                 f"{method} results for query must exclude the query itself; "
                 f"query was returned in its own top-3"
+            )
+            # Spec: "top-3 most similar" — results must be sorted by score descending
+            scores = [s for _, s in results]
+            assert scores == sorted(scores, reverse=True), (
+                f"{method} results must be sorted by similarity descending "
+                f"(spec: top-3 most similar); got scores {scores}"
             )
