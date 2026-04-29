@@ -100,9 +100,12 @@ if __name__ == "__main__":
     if sample_bert is not None:
         print(f"Sample BERT embedding shape: {sample_bert.shape}")
 
-    # Task 4: Compare
+    # Task 4: Compare — pick one query per category so the cross-method
+    # ranking comparison is not degenerate (the CSV is sorted by category,
+    # so texts[:5] would all be from the same one).
     if result and glove and tfidf_sim is not None:
-        queries = texts[:5]
+        queries = [df[df["category"] == cat]["text"].iloc[0]
+                   for cat in df["category"].unique()]
         comparison = compare_similarities(
             texts, queries, tfidf_sim, glove, model, tokenizer
         )
