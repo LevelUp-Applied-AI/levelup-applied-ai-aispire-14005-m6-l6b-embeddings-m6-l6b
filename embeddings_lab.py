@@ -2,7 +2,7 @@
 Module 6 Week B — Lab: Embeddings Comparison
 
 Compare three text representation methods — TF-IDF, GloVe, and
-DistilBERT — on a corpus of climate articles.
+DistilBERT — on the BBC News corpus (5 categories).
 """
 
 import numpy as np
@@ -14,80 +14,41 @@ from sklearn.metrics.pairwise import cosine_similarity as sklearn_cosine
 def build_tfidf(texts):
     """Build TF-IDF representations for a list of texts.
 
-    Args:
-        texts: List of strings (documents).
-
-    Returns:
-        Tuple of (tfidf_matrix, vectorizer) where tfidf_matrix is a sparse
-        matrix of shape (n_texts, vocab_size) and vectorizer is the fitted
-        TfidfVectorizer instance.
+    Returns (tfidf_matrix, vectorizer).
     """
-    # TODO: Create a TfidfVectorizer, fit-transform on texts, and return
-    #       both the matrix and the vectorizer
     pass
 
 
 def compute_tfidf_similarity(tfidf_matrix):
     """Compute pairwise cosine similarity from a TF-IDF matrix.
 
-    Args:
-        tfidf_matrix: Sparse matrix from build_tfidf().
-
-    Returns:
-        numpy array of shape (n, n) with pairwise cosine similarities.
+    Returns a numpy array of shape (n, n).
     """
-    # TODO: Use sklearn's cosine_similarity to compute the pairwise matrix
     pass
 
 
 def load_glove(filepath):
     """Load pre-trained GloVe vectors from a text file.
 
-    Args:
-        filepath: Path to the GloVe text file.
-
-    Returns:
-        Dictionary mapping each word (str) to its embedding (numpy array).
+    Returns a dict mapping each word to a numpy array.
     """
-    # TODO: Read the file line by line, parse word and vector, store in dict
     pass
 
 
 def text_to_glove(text, embeddings):
     """Compute the average GloVe embedding for a text.
 
-    Average the GloVe vectors of all words in the text that are in the
-    vocabulary. Skip out-of-vocabulary (OOV) words.
-
-    Args:
-        text: Input string.
-        embeddings: Dictionary mapping words to numpy arrays (from load_glove).
-
-    Returns:
-        numpy array of shape (50,) — the average embedding. If no words are
-        found in the vocabulary, return a zero vector of shape (50,).
+    Skip out-of-vocabulary words. If every word is OOV, return a zero
+    vector of shape (50,).
     """
-    # TODO: Tokenize (lowercase, split), look up each word in embeddings,
-    #       average the vectors found, handle the all-OOV case
     pass
 
 
 def extract_bert_embedding(text, tokenizer, model):
     """Extract a sentence embedding from DistilBERT.
 
-    Tokenize the text, pass through the model, and mean-pool the
-    last hidden state across all tokens to produce a single vector.
-
-    Args:
-        text: Input string.
-        tokenizer: Hugging Face tokenizer (e.g., DistilBertTokenizer).
-        model: Hugging Face model (e.g., DistilBertModel).
-
-    Returns:
-        numpy array of shape (768,) — the mean-pooled embedding.
+    Returns a numpy array of shape (768,).
     """
-    # TODO: Tokenize with padding/truncation, run model forward pass,
-    #       extract last_hidden_state, mean-pool across token dimension
     pass
 
 
@@ -95,29 +56,13 @@ def compare_similarities(texts, queries, tfidf_sim, glove_embeddings,
                          bert_model, bert_tokenizer):
     """Compare similarity rankings across TF-IDF, GloVe, and BERT.
 
-    For each query text, find the top-3 most similar texts according to
-    each representation method.
+    For each query, find the top-3 most similar texts under each method,
+    excluding the query itself. Return:
 
-    Args:
-        texts: List of document strings.
-        queries: List of query strings (subset of texts or new queries).
-        tfidf_sim: Precomputed TF-IDF similarity matrix (n x n).
-        glove_embeddings: Dictionary from load_glove().
-        bert_model: Hugging Face DistilBERT model.
-        bert_tokenizer: Hugging Face DistilBERT tokenizer.
-
-    Returns:
-        Dictionary with structure:
-        {
-            query_text: {
-                'tfidf': [(text, score), ...],   # top-3
-                'glove': [(text, score), ...],   # top-3
-                'bert':  [(text, score), ...],   # top-3
-            }
-        }
+        {query_text: {"tfidf": [(text, score), ...],
+                      "glove": [(text, score), ...],
+                      "bert":  [(text, score), ...]}}
     """
-    # TODO: For each query, compute similarity to all texts using each method,
-    #       rank by similarity, and return top-3 for each method
     pass
 
 
@@ -126,7 +71,7 @@ if __name__ == "__main__":
     from transformers import AutoTokenizer, AutoModel
 
     # Load data
-    df = pd.read_csv("data/climate_articles.csv")
+    df = pd.read_csv("data/bbc_news.csv")
     texts = df["text"].tolist()
     print(f"Loaded {len(texts)} texts")
 
@@ -140,7 +85,7 @@ if __name__ == "__main__":
             print(f"TF-IDF similarity matrix shape: {tfidf_sim.shape}")
 
     # Task 2: GloVe
-    glove = load_glove("data/glove_5k_50d.txt")
+    glove = load_glove("data/glove_50k_50d.txt")
     if glove:
         print(f"Loaded {len(glove)} GloVe vectors")
         sample_emb = text_to_glove(texts[0], glove)

@@ -1,6 +1,6 @@
 # Lab 6B — Embeddings Comparison
 
-Compare three text representation methods — TF-IDF, GloVe, and DistilBERT — on a corpus of climate articles.
+Compare three text representation methods — TF-IDF, GloVe, and DistilBERT — on the BBC News corpus (5 categories).
 
 ## Objectives
 
@@ -23,8 +23,8 @@ DistilBERT uses PyTorch. `torch` is listed in `requirements.txt` (version 2.4 or
 
 ## Data
 
-- `data/climate_articles.csv` — Climate article corpus
-- `data/glove_5k_50d.txt` — Pre-extracted GloVe vectors (5000 words, 50 dimensions)
+- `data/bbc_news.csv` — ~200 BBC News article snippets balanced across 5 categories (business, entertainment, politics, sport, tech)
+- `data/glove_50k_50d.txt` — Pre-extracted GloVe vectors (50,000 words, 50 dimensions)
 
 ## Tasks
 
